@@ -25,7 +25,7 @@ while cap.isOpened():
         break
 
     if os.getenv('USE_GPU'):
-        results = model(frame, device=0, classes=[2])
+        results = model(frame, device='cpu', classes=[2])
     else:
         results = model(frame)
 
