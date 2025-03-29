@@ -1,0 +1,11 @@
+# In project root directory create `.env` file with following content:
+```
+# MODEL PATHS
+MAIN_MODEL_PATH = "data/models/yolo11l.pt"
+CAR_BRAND_MODEL_PATH = "data/models/car_brand_model.pt"
+# PATHS
+VIDEO_PATH = "data/videos/car-video_1.mp4"
+
+# VARIABLES
+USE_GPU = True
+```
