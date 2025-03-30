@@ -1,11 +1,17 @@
 import asyncio
+import os
 import cv2
 import threading
+import duckdb
+import uuid
+from dotenv import load_dotenv
 from utils.host_related.is_gpu_available import USE_GPU
 from utils.frame.display_frame import display_frame
 from pipeline.car_feature_extraction.car_brand.car_brand import detect_car_brand
 from utils.extract_box import extract_car
-
+processed_track_ids = set()
+load_dotenv()
+db_path = os.getenv("DATABASE_PATH1")
 # Słownik przechowujący przypisane marki do track_id samochodów
 car_brands = {}
 lock = threading.Lock()  # Mutex do synchronizacji dostępu do car_brands
@@ -38,13 +44,33 @@ def process_frame(frame, model):
 
 
 def handle_car_brand_detection(track_id, cropped_box):
-    """Obsługuje wykrywanie marki w osobnym wątku."""
+    """Obsługuje wykrywanie marki w osobnym wątku i zapisuje ją do bazy danych tylko raz dla danego track_id."""
+
+    # Jeśli track_id już został zapisany, pomijamy
+    with lock:
+        if track_id in processed_track_ids:
+            return
+
     car_brand = asyncio.run(detect_car_brand(cropped_box))
+
     if car_brand:
         with lock:
             car_brands[track_id] = car_brand
+            processed_track_ids.add(track_id)  # Dodajemy track_id do zbioru zapisanych
 
+        # Połączenie z bazą danych
+        conn = duckdb.connect(db_path)
 
+        # Pobranie najwyższego id w tabeli
+
+        new_id = str(uuid.uuid4())  # Generuje unikalny identyfikator
+
+        conn.execute("""
+            INSERT INTO vehicles (id, license_plate, vehicle_type, vehicle_brand, color)
+            VALUES (?, ?, ?, ?, ?)
+        """, (new_id, 'PLACEHOLDER_PLATE', 'KOMBI_PLACEHOLDER', car_brand, 'PLACEHOLDER_COLOR'))
+        # Zamknięcie połączenia
+        conn.close()
 def draw_custom_annotations(frame, result):
     """Rysowanie bounding boxów oraz wyświetlanie marki."""
     for i, box in enumerate(result.boxes.xyxy):

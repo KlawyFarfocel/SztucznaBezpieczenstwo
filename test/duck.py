@@ -1,29 +1,39 @@
+import os
 import duckdb
+from dotenv import load_dotenv
 
-# Połączenie z bazą danych (jeśli plik nie istnieje, zostanie utworzony)
-conn = duckdb.connect("vehicles.db")
+load_dotenv()
+db_path = os.getenv("DATABASE_PATH")
 
-# Krok 1: Tworzenie tabeli
+if db_path is None:
+    raise ValueError("Brak wartości DATABASE_PATH w pliku .env!")
+
+# Tworzymy katalog, jeśli nie istnieje
+db_dir = os.path.dirname(db_path)
+if not os.path.exists(db_dir):
+    os.makedirs(db_dir)
+    print(f"Utworzono katalog: {db_dir}")
+
+print(f"Ścieżka do bazy danych: {db_path}")
+
+# Usuwamy plik, jeśli istnieje
+#if os.path.exists(db_path):
+#    os.remove(db_path)
+#   print("Usunięto uszkodzony plik.")
+
+# Tworzymy nową bazę
+conn = duckdb.connect(db_path)
+# Krok 3: Odczyt wszystkich rekordów
 conn.execute("""
 CREATE TABLE IF NOT EXISTS vehicles (
-    id INTEGER PRIMARY KEY,
+    id TEXT PRIMARY KEY,
     license_plate TEXT,
     vehicle_type TEXT,
+    vehicle_brand TEXT,
     color TEXT
 )
 """)
 
-# Krok 2: Generowanie id i dodanie rekordu
-# Pobierz najwyższe id w tabeli i zwiększ je o 1
-max_id = conn.execute("SELECT COALESCE(MAX(id), 0) FROM vehicles").fetchone()[0]
-
-# Dodanie rekordu z nowym id
-conn.execute("""
-INSERT INTO vehicles (id, license_plate, vehicle_type, color)
-VALUES (?, ?, ?, ?)
-""", (max_id + 1, 'ABC123', 'SUV', 'Czarny'))
-
-# Krok 3: Odczyt wszystkich rekordów
 rows = conn.execute("SELECT * FROM vehicles").fetchall()
 
 # Wyświetlenie wyników
@@ -31,4 +41,6 @@ for row in rows:
     print(row)
 
 # Zamknięcie połączenia
+
 conn.close()
+print("Baza danych została ponownie utworzona.")
