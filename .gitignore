@@ -2,3 +2,5 @@
 *.pyc
 .env
 /data/videos
+**/__pycache__/*
+*.pyc
