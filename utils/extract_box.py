@@ -1,6 +1,5 @@
 import cv2
 
-
 def extract_car(frame, result, className):
     car_class_id = list(result.names.keys())[list(result.names.values()).index(className)]
 

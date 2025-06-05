@@ -1,4 +1,4 @@
-import easyocr
+from fast_alpr import ALPR
 import cv2
 
 def read_plate(frame):
