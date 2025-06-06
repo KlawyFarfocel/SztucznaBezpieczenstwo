@@ -17,6 +17,10 @@ async def detect_car_brand_async(frame, model):
             if result.boxes:
                 predicted_class_ids = result.boxes.cls.int().tolist()
                 for predicted_class_id in predicted_class_ids:
+                    if model.names[predicted_class_id] == 'Maruti Suzuki':
+                        return "Suzuki"
+                    elif model.names[predicted_class_id] == 'Citreon':
+                        return "Citroen"
                     return model.names[predicted_class_id]
         return None
 

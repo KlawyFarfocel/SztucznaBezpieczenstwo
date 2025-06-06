@@ -16,6 +16,7 @@ load_dotenv()
 
 main_model = YOLO(os.getenv('MAIN_MODEL_PATH'))
 car_brand_model = YOLO(os.getenv("CAR_BRAND_MODEL_PATH"))
+car_color_model = YOLO(os.getenv("CAR_COLOR_MODEL_PATH"))
 video_path = os.getenv('VIDEO_PATH')
 alpr = ALPR(
     detector_model="yolo-v9-t-384-license-plate-end2end",
@@ -31,7 +32,7 @@ async def process_and_show(update_ui_callback, should_continue=lambda: True):
         if not ret:
             break
 
-        frame = await process_frame(frame, main_model, car_brand_model, alpr) 
+        frame = await process_frame(frame, main_model, car_brand_model, alpr, car_color_model) 
 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 

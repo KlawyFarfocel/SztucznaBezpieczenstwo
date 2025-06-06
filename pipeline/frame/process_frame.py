@@ -17,7 +17,7 @@ last_processed_frame = {}
 db_path = os.getenv("DATABASE_PATH1")
 frame_counter = 0
 
-async def process_frame(frame, main_model, car_brand_model, alpr):
+async def process_frame(frame, main_model, car_brand_model, alpr, car_color_model):
     global frame_counter
     frame_counter += 1
 
@@ -50,23 +50,22 @@ async def process_frame(frame, main_model, car_brand_model, alpr):
 
                 if track_id not in processed_track_ids:
                     car_brand = await detect_car_brand_async(cropped_box, car_brand_model)
-                    car_color = await detect_car_color_async(cropped_box)
+                    car_color = await detect_car_color_async(cropped_box, car_color_model)
+
+                    if car_color:
+                        car_colors[track_id] = car_color
 
                     if car_brand:
                         car_brands[track_id] = car_brand
                         processed_track_ids.add(track_id)
-                    if car_color:
-                        car_colors[track_id] = car_color
-
-                        # TODO zapisz w bazie - wypierdol vechicle_type
-                    #     conn = duckdb.connect(db_path)
-                    #     new_id = str(uuid.uuid4())
-                    #     conn.execute("""
-                    #     INSERT INTO vehicles (id, license_plate, vehicle_type, vehicle_brand, color)
-                    #     VALUES (?, ?, ?, ?, ?)
-                    # """, (new_id, 'PLACEHOLDER_PLATE', 'KOMBI_PLACEHOLDER', car_brand, 'PLACEHOLDER_COLOR'))
-                    # # Zamknięcie połączenia
-                    #     conn.close()
+                        conn = duckdb.connect(db_path)
+                        new_id = str(uuid.uuid4())
+                        rejestracja = car_registration_numbers.get(track_id, {}).get("text", "N/A")
+                        conn.execute("""
+                        INSERT INTO vehicles (id, license_plate, vehicle_brand, color)
+                        VALUES (?, ?, ?, ?)
+                        """, (new_id, rejestracja,  car_brand, car_color))
+                        conn.close()
     return frame
     
 
